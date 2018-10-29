@@ -246,8 +246,9 @@ namespace NLog.Targets
 
         private void ConnectClient()
         {
+            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}", this.Host, this.Port);
             this.client.Connect(this.Host, this.Port);
-            this.stream = this.client.GetStream();
+            this.stream = new BufferedStream(this.client.GetStream());
             this.emitter = new FluentdEmitter(this.stream);
         }
 

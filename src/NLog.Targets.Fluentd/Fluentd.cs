@@ -23,6 +23,9 @@ using System.Diagnostics;
 using System.Reflection;
 using MsgPack;
 using MsgPack.Serialization;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Authentication;
 
 namespace NLog.Targets
 {
@@ -157,7 +160,7 @@ namespace NLog.Targets
         private static DateTime unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private readonly Packer packer;
         private readonly SerializationContext serializationContext;
-        private readonly Stream destination;
+        private readonly SslStream destination;
 
         public void Emit(DateTime timestamp, string tag, IDictionary<string, object> data)
         {
@@ -166,10 +169,10 @@ namespace NLog.Targets
             this.packer.PackString(tag, Encoding.UTF8);
             this.packer.Pack((ulong)unixTimestamp);
             this.packer.Pack(data, serializationContext);
-            this.destination.Flush();    // Change to packer.Flush() when packer is upgraded
+            this.packer.Flush();
         }
 
-        public FluentdEmitter(Stream stream)
+        public FluentdEmitter(SslStream stream)
         {
             this.destination = stream;
             this.packer = Packer.Create(destination);
@@ -211,6 +214,10 @@ namespace NLog.Targets
 
         private Stream stream;
 
+        private SslStream sslStream;
+
+        static X509CertificateCollection serverCertificateCollection = null;
+
         private FluentdEmitter emitter;
 
         protected override void InitializeTarget()
@@ -247,9 +254,24 @@ namespace NLog.Targets
         private void ConnectClient()
         {
             NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}", this.Host, this.Port);
+            X509Certificate serverCertificate = null;
+            serverCertificateCollection.Add(serverCertificate);
+
             this.client.Connect(this.Host, this.Port);
             this.stream = new BufferedStream(this.client.GetStream());
-            this.emitter = new FluentdEmitter(this.stream);
+            this.sslStream = new SslStream(this.client.GetStream());
+            try
+            {
+                sslStream.AuthenticateAsClient(this.Host, serverCertificateCollection,enabledSslProtocols: SslProtocols.Tls12, checkCertificateRevocation: true);
+            }
+            catch (AuthenticationException e)
+            {
+                NLog.Common.InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", this.Host, this.Port);
+            }
+            finally
+            {
+                this.emitter = new FluentdEmitter(this.sslStream);
+            }
         }
 
         protected void Cleanup()

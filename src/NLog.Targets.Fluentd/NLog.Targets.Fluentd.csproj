@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net35;net40;net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
 
     <Description>NLog Target that emits the log entries to a fluentd node</Description>
     <Authors>Moriyoshi Koizumi</Authors>
@@ -26,8 +26,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
 
-    <PackageReference Include="MsgPack.Cli" Version="0.8.0" />
-    <PackageReference Include="NLog" Version="2.1.0.0" />
+    <PackageReference Include="MsgPack.Cli" Version="1.0.0" />
+    <PackageReference Include="NLog" Version="4.5.10" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- 
+  This file needs to be put in the application directory. Make sure to set 
+  'Copy to Output Directory' option in Visual Studio.
+  -->
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      throwConfigExceptions="true"
+      internalLogFile="c:\temp\nlog\internal-log.txt" 
+      internalLogLevel="Debug">
+  <targets>
+    <default-wrapper xsi:type="AsyncWrapper" overflowAction="Grow" queueLimit="10000" timeToSleepBetweenBatches="0" />
+    <target name="nlog-service-default" xsi:type="File" layout="${message}" fileName="c:\temp\nlog\${logger}_${shortdate}.txt" keepFileOpen="true" />
+  </targets>  
+  <targets>
+    <default-wrapper xsi:type="BufferingWrapper" bufferSize="200" flushTimeout="50" slidingTimeout="true" overflowAction="Flush"/>
+    <target xsi:type="FallbackGroup" name="fluentd-fallback-group" returnToFirstOnSuccess="true">      
+      <target xsi:type="Fluentd"
+              name="fluentd"
+              host="127.0.0.1"
+              port="24224"
+              tag="nlog.demo"
+              useSsl="true"
+              ValidateCertificate="false"
+              layout="${message}"
+              />      
+      <target xsi:type="File"
+              name="fluentd-file-fallback"
+              layout="${message}"
+              fileName="c:\Temp\nlog\Fluentd\${logger}_${shortdate}.txt"
+              encoding="utf-8"
+            />
+    </target>
+  </targets>
+  <rules>
+    <logger name="demo" minLevel="Info" writeTo="fluentd-fallback-group" />
+    <logger name="*" minlevel="Info" writeTo="nlog-service-default" />
+  </rules>
+</nlog>

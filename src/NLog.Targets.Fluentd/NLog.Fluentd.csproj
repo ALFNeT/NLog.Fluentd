@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45</TargetFrameworks>
+
+    <Description>NLog Target that emits the log entries to a fluentd node.
+--
+This is a fork of Moriyoshi Koizumi's NLog.Target.Fluentd
+
+
+</Description>
+    <Authors>Alan Featherston Lago</Authors>
+    <CurrentYear>$([System.DateTime]::Now.ToString(yyyy))</CurrentYear>
+    <Copyright></Copyright>
+
+    <Version>1.0.0.0</Version>
+    
+    <PackageTags>NLog;fluentd;log;logging</PackageTags>
+    <PackageIconUrl>http://nlog-project.org/N.png</PackageIconUrl>
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl></RepositoryUrl>
+    <AssemblyName>NLog.Fluentd</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company>Alan Featherston Lago</Company>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+
+    <PackageReference Include="MsgPack.Cli" Version="1.0.0" />
+    <PackageReference Include="NLog" Version="4.5.10" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="MsgPack.Cli" Version="0.9.2" />
+    <PackageReference Include="NLog" Version="4.5.0" />
+  </ItemGroup>
+
+
+</Project>

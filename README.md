@@ -1,40 +1,61 @@
-NLog.Targets.Fluentd
+NLog.Fluentd
 ====================
 
-NLog.Targets.Fluents is a custom target of [NLog](https://github.com/nlog/NLog) that emits the log entries to a [fluentd](http://www.fluentd.org/) node.
+NLog.Fluentd is a custom target of [NLog](https://github.com/nlog/NLog) that emits the log entries to a [fluentd](http://www.fluentd.org/) node.
 
-Settings
---------
+Installation
+-------
+NLog.Fluentd will be available as a NuGet Package. Type the following command into the Nuget Package Manager Console window to install it:
 
-Setting                     | Description                                                  | Example       
---------------------------- | -----------------------------------------------------------  | --------------
-Host                        | Host name of the fluentd node                                | example.local
-Port                        | Port number of the fluentd node                              | 24224
-Tag                         | Fluentd tag name                                             | windowshost
-NoDelay                     | Enable Nagle's algorithm                                     | true
-SendBufferSize              | Send buffer size                                             | 8192
-SendTimeout                 | Send timeout                                                 | 2
-LingerEnabled               | Wait for all the data to be sent when closing the connection | false
-LingerTime                  | Linger timeout                                               | 2
-EmitStackTraceWhenAvailable | Emit a stacktrace for every log entry when available         | false
-IncludeAllProperties        | Include structured logging parameters for every log entry    | false
+    Install-Package NLog.Fluentd
 
+Usage
+-----
+The `<target />` configuration section contains three required fields.
+
+Setting                     | Required | Description                                                  | Default       
+--------------------------- |--------- |-----------------------------------------------------------   | --------------
+Host                        | yes      | Host name of the fluentd node                                | 127.0.0.1
+Port                        | yes      | Port number of the fluentd node                              | 24224
+Tag                         | yes      | Fluentd tag name                                             | nlog
+UseSsl                      | no       | Use SSL/TLS to conenct to the fluentd node                   | false
+ValidateCertificate         | no       | Validate the certificate returned by the fluentd node        | true
+
+For fluentd use case I recommend using the Buffering Wrapper (or the Async one), along with a fallback option.
+
+```
+<targets>
+    <default-wrapper xsi:type="BufferingWrapper" bufferSize="200" flushTimeout="50" slidingTimeout="true" overflowAction="Flush"/>
+    <target xsi:type="FallbackGroup" name="fluentd-fallback-group" returnToFirstOnSuccess="true">      
+        <target xsi:type="Fluentd"
+                name="fluentd"
+                host="127.0.0.1"
+                port="24224"
+                tag="nlog.demo"
+                useSsl="true"
+                ValidateCertificate="false"
+                layout="${message}"
+                />      
+        <target xsi:type="File"
+                name="fluentd-file-fallback"
+                layout="${message}"
+                fileName="c:\Temp\nlog\Fluentd\${logger}_${shortdate}.txt"
+                encoding="utf-8"
+            />
+    </target>
+</targets>
+```
+
+TODOs
+-------
+* Test SSL/TLS connection before sending packages
+* Allow to send data using JSON instead of MsgPack
+* Add support for other .Net targets (ie. Standard)
+
+Notes
+-------
+This started as a fork of [Nlog.Targets.Fluentd](https://github.com/fluent/NLog.Targets.Fluentd) by Moriyoshi Koizumi.
 
 License
 -------
-
-NLog.Targets.Fluentd
-
-Copyright (c) 2014 Moriyoshi Koizumi and contributors.
-
-This software is licensed under the Apache License, Version 2.0 (the "License");
-you may not use this software except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+MIT License

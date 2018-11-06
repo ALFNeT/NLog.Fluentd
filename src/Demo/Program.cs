@@ -15,28 +15,63 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NLog;
+using Newtonsoft.Json;
 
 namespace Demo
 {
     class Program
     {
+        public class InternalTestObject
+        {
+            public string AA { get; set; }
+            public int BB { get; set; }
+
+            public DateTime DD { get; set; }
+
+            public override string ToString() { return AA; }
+        }
+        public class TestObject
+        {
+            public string A { get; set; }
+            public int B { get; set; }
+
+            public DateTime D { get; set; }
+
+            public InternalTestObject I { get; set; }
+
+            public override string ToString() { return A; }
+        }
         static void Main(string[] args)
         {
-            var config = new NLog.Config.LoggingConfiguration();
-            using (var fluentdTarget = new NLog.Targets.Fluentd())
+            // LogManager.ThrowExceptions = true;
+            var logger = NLog.LogManager.GetLogger("demo");
+
+            var testObj = new TestObject
             {
-                fluentdTarget.Layout = new NLog.Layouts.SimpleLayout("${longdate}|${level}|${callsite}|${logger}|${message}");
-                config.AddTarget("fluentd", fluentdTarget);
-                config.LoggingRules.Add(new NLog.Config.LoggingRule("demo", LogLevel.Debug, fluentdTarget));
-                var loggerFactory = new LogFactory(config);
-                var logger = loggerFactory.GetLogger("demo");
-                logger.Info("Hello World!");
-            }
+                A = "A",
+                B = 2,
+                D = DateTime.UtcNow,
+                I = new InternalTestObject
+                {
+                    AA = "A",
+                    BB = 2,
+                    DD = DateTime.UtcNow
+                }
+            };
+            var eventJson = JsonConvert.SerializeObject(testObj);
+            while (true)
+            {
+                var i = 0;
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                while (i < 100000)
+                {
+                    logger.Info(eventJson);
+                    i++;
+                }
+                watch.Stop();
+                Console.Write("Elapsed time: {0}", watch.ElapsedMilliseconds);
+                Console.ReadLine();
+            }            
         }
     }
 }

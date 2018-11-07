@@ -18,7 +18,7 @@ Setting                     | Required | Description                            
 Host                        | yes      | Host name of the fluentd node                                | 127.0.0.1
 Port                        | yes      | Port number of the fluentd node                              | 24224
 Tag                         | yes      | Fluentd tag name                                             | nlog
-UseSsl                      | no       | Use SSL/TLS to conenct to the fluentd node                   | false
+UseSsl                      | no       | Use SSL/TLS to connect to the fluentd node                   | false
 ValidateCertificate         | no       | Validate the certificate returned by the fluentd node        | true
 
 For fluentd use case I recommend using the Buffering Wrapper (or the Async one), along with a fallback option.
@@ -51,10 +51,11 @@ TODOs
 * Test SSL/TLS connection before sending packages
 * Allow to send data using JSON instead of MsgPack
 * Add support for other .Net targets (ie. Standard)
+* Re-introduce network settings options
 
 Notes
 -------
-This started as a fork of [Nlog.Targets.Fluentd](https://github.com/fluent/NLog.Targets.Fluentd) by Moriyoshi Koizumi.
+This started as a fork of Moriyoshi Koizumi's [Nlog.Targets.Fluentd](https://github.com/fluent/NLog.Targets.Fluentd) NLog extension.
 
 License
 -------

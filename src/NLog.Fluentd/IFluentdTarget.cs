@@ -20,7 +20,7 @@
         /// <summary>
         /// Use an encrypted connection to communicate with Fluentd.
         /// </summary>
-        bool useSsl { get; set; }
+        bool UseSsl { get; set; }
 
         /// <summary>
         /// Set it to false to disable certificate validation for the TLS connection.

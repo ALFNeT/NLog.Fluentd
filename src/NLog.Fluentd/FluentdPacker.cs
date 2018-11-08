@@ -9,7 +9,6 @@ namespace NLog.Fluentd
 {
     internal class FluentdPacker
     {
-        //https://github.com/msgpack/msgpack-cli recommends the serialization context be made static
         private static Lazy<SerializationContext> serializationContextWrapper = new Lazy<SerializationContext>(
             () => InstantiateSerializationContext());
 
@@ -17,7 +16,6 @@ namespace NLog.Fluentd
 
         private static DateTime unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private readonly Packer packer;
-        //private readonly SerializationContext serializationContext;
 
         public void Pack(DateTime timestamp, string tag, IDictionary<string, string> data)
 

@@ -4,8 +4,6 @@
     <TargetFrameworks>net45</TargetFrameworks>
 
     <Description>NLog Target that emits the log entries to a fluentd node.
---
-This is a fork of Moriyoshi Koizumi's NLog.Target.Fluentd
 
 
 </Description>
@@ -13,17 +11,19 @@ This is a fork of Moriyoshi Koizumi's NLog.Target.Fluentd
     <CurrentYear>$([System.DateTime]::Now.ToString(yyyy))</CurrentYear>
     <Copyright></Copyright>
 
-    <Version>1.0.0.0</Version>
+    <Version>1.0.0.1</Version>
     
     <PackageTags>NLog;fluentd;log;logging</PackageTags>
     <PackageIconUrl>http://nlog-project.org/N.png</PackageIconUrl>
-    <PackageProjectUrl></PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/ALFNeT/NLog.Fluentd</PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl></RepositoryUrl>
+    <RepositoryUrl>https://github.com/ALFNeT/NLog.Fluentd</RepositoryUrl>
     <AssemblyName>NLog.Fluentd</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Company>Alan Featherston Lago</Company>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">

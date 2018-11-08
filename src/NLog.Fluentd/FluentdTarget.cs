@@ -35,10 +35,9 @@ namespace NLog.Fluentd
         [RequiredParameter]
         [DefaultValue("nlog")]
         public string Tag { get; set; }
-        
 
         [DefaultValue(false)]
-        public bool useSsl { get; set; }
+        public bool UseSsl { get; set; }
 
         [DefaultValue(true)]
         public bool ValidateCertificate { get; set; }
@@ -47,7 +46,7 @@ namespace NLog.Fluentd
 
         private Stream stream;
 
-        private FluentdPacker emitter;
+        private FluentdPacker packer;
 
         public FluentdTarget()
         {
@@ -80,7 +79,7 @@ namespace NLog.Fluentd
 
         private void ConnectClient()
         {
-            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", this.Host, this.Port, this.useSsl);
+            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", this.Host, this.Port, this.UseSsl);
 
             try
             {
@@ -92,7 +91,7 @@ namespace NLog.Fluentd
                 throw;
             }
 
-            if (this.useSsl)
+            if (this.UseSsl)
             {
                 SslStream sslStream = new SslStream(new BufferedStream(this.client.GetStream()),
                                                     false,
@@ -116,7 +115,7 @@ namespace NLog.Fluentd
             {
                 this.stream = new BufferedStream(this.client.GetStream());
             }
-            this.emitter = new FluentdPacker(this.stream);
+            this.packer = new FluentdPacker(this.stream);
         }
 
         protected void Cleanup()
@@ -134,7 +133,7 @@ namespace NLog.Fluentd
             {
                 this.stream = null;
                 this.client = null;
-                this.emitter = null;
+                this.packer = null;
             }
         }
 
@@ -163,7 +162,7 @@ namespace NLog.Fluentd
             record.Add("message", logMessage);
             try
             {
-                this.emitter.Pack(logEvent.LogEvent.TimeStamp, this.Tag, record);
+                this.packer.Pack(logEvent.LogEvent.TimeStamp, this.Tag, record);
             }
             catch (Exception ex)
             {

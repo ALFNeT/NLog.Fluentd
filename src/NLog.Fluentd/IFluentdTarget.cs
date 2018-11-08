@@ -18,11 +18,6 @@
         string Tag { get; set; }
 
         /// <summary>
-        /// Formats the payload to Fluentd using `MsgPack` or `JSON`.
-        /// </summary>
-        string ForwardProtocol { get; set; }
-
-        /// <summary>
         /// Use an encrypted connection to communicate with Fluentd.
         /// </summary>
         bool useSsl { get; set; }

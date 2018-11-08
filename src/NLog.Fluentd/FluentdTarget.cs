@@ -35,12 +35,7 @@ namespace NLog.Fluentd
         [RequiredParameter]
         [DefaultValue("nlog")]
         public string Tag { get; set; }
-
-        /// <summary>
-        /// Formats the payload to Fluentd using `MsgPack` or `JSON`.
-        /// </summary>
-        [DefaultValue("MsgPack")]
-        public string ForwardProtocol { get; set; }
+        
 
         [DefaultValue(false)]
         public bool useSsl { get; set; }
@@ -75,21 +70,28 @@ namespace NLog.Fluentd
                   X509Chain chain,
                   SslPolicyErrors sslPolicyErrors)
         {
-            if (sslPolicyErrors == SslPolicyErrors.None)
+            if(!ValidateCertificate)
             {
                 return true;
             }
-            if (this.ValidateCertificate)
-                return false; 
-            else
-                return true;
+
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         private void ConnectClient()
         {
             NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", this.Host, this.Port, this.useSsl);
 
-            this.client.Connect(this.Host, this.Port);
+            try
+            {
+                this.client.Connect(this.Host, this.Port);
+            }
+            catch(SocketException se)
+            {
+                InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", this.Host, this.Port);
+                throw;
+            }
+
             if (this.useSsl)
             {
                 SslStream sslStream = new SslStream(new BufferedStream(this.client.GetStream()),
@@ -156,7 +158,7 @@ namespace NLog.Fluentd
         {
             GetConnection();
             InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, this.Host, this.Port);
-            var record = new Dictionary<string, dynamic>();
+            var record = new Dictionary<string, string>();
             var logMessage = GetFormattedMessage(logEvent.LogEvent);
             record.Add("message", logMessage);
             try

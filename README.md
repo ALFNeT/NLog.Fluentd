@@ -1,5 +1,6 @@
 NLog.Fluentd
 ====================
+[![NuGet](https://img.shields.io/badge/NLog.Fluentd-v1.0.1-blue.svg)](https://www.nuget.org/packages/NLog.Fluentd)
 
 NLog.Fluentd is a custom target of [NLog](https://github.com/nlog/NLog) that emits the log entries to a [fluentd](http://www.fluentd.org/) node.
 

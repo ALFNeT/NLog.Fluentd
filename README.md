@@ -13,13 +13,14 @@ Usage
 -----
 The `<target />` configuration section contains three required fields.
 
-Setting                     | Required | Description                                                  | Default       
---------------------------- |--------- |-----------------------------------------------------------   | --------------
-Host                        | yes      | Host name of the fluentd node                                | 127.0.0.1
-Port                        | yes      | Port number of the fluentd node                              | 24224
-Tag                         | yes      | Fluentd tag name                                             | nlog
-UseSsl                      | no       | Use SSL/TLS to connect to the fluentd node                   | false
-ValidateCertificate         | no       | Validate the certificate returned by the fluentd node        | true
+Setting                     | Type   | Required | Description                                                  | Default       
+--------------------------- |------- |--------- |------------------------------------------------------------- | --------------
+Host                        | Layout | yes      | Host name of the fluentd node                                | 127.0.0.1
+Port                        | Layout | yes      | Port number of the fluentd node                              | 24224
+Tag                         | Layout | yes      | Fluentd tag name                                             | nlog
+UseSsl                      | bool   | no       | Use SSL/TLS to connect to the fluentd node                   | false
+ValidateCertificate         | bool   | no       | Validate the certificate returned by the fluentd node        | true
+Enabled                     | Layout | no       | Enables or disables sending messages to fluentd              | true
 
 For fluentd use case I recommend using the Buffering Wrapper (or the Async one), along with a fallback option.
 

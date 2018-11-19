@@ -1,21 +1,6 @@
-﻿// NLog.Targets.Fluentd
-// 
-// Copyright (c) 2014 Moriyoshi Koizumi and contributors.
-// 
-// This file is licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//    http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-using System;
+﻿using System;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Demo
 {
@@ -43,28 +28,27 @@ namespace Demo
         }
         static void Main(string[] args)
         {
-            // LogManager.ThrowExceptions = true;
-            var logger = NLog.LogManager.GetLogger("demo");
-
-            var testObj = new TestObject
-            {
-                A = "A",
-                B = 2,
-                D = DateTime.UtcNow,
-                I = new InternalTestObject
-                {
-                    AA = "A",
-                    BB = 2,
-                    DD = DateTime.UtcNow
-                }
-            };
-            var eventJson = JsonConvert.SerializeObject(testObj);
+            var logger = LogManager.GetLogger("demo");
+            MappedDiagnosticsLogicalContext.Set("FluendEnabled", "true");
             while (true)
             {
                 var i = 0;
                 var watch = System.Diagnostics.Stopwatch.StartNew();
-                while (i < 100000)
+                while (i < 100)
                 {
+                    var testObj = new TestObject
+                    {
+                        A = "A",
+                        B = i,
+                        D = DateTime.UtcNow,
+                        I = new InternalTestObject
+                        {
+                            AA = "A",
+                            BB = i,
+                            DD = DateTime.UtcNow
+                        }
+                    };
+                    var eventJson = JsonConvert.SerializeObject(testObj);
                     logger.Info(eventJson);
                     i++;
                 }

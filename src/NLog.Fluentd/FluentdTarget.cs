@@ -9,44 +9,54 @@ using NLog.Common;
 using NLog.Config;
 using NLog.Targets;
 using System.ComponentModel;
+using NLog.Layouts;
 
 namespace NLog.Fluentd
 {
     [Target("Fluentd")]
     public class FluentdTarget : TargetWithLayout, IFluentdTarget
     {
+        private string _host;
+        private string _tag;
+        private int _port;
+        private TcpClient client;
+        private Stream stream;
+        private FluentdPacker packer;
+
         /// <summary>
         /// Sets the Host of the Fluentd instance which will receive the logs
         /// </summary>
         [RequiredParameter]
         [DefaultValue("127.0.0.1")]
-        public string Host { get; set; }
+        public Layout Host { get; set; }
 
         /// <summary>
         /// Sets the Port for the connection
         /// </summary>
         [RequiredParameter]
-        [DefaultValue(24224)]
-        public int Port { get; set; }
+        [DefaultValue("24224")]
+        public Layout Port { get; set; }
 
         /// <summary>
         /// Sets the Tag for the log redirection within Fluentd
         /// </summary>
         [RequiredParameter]
         [DefaultValue("nlog")]
-        public string Tag { get; set; }
+        public Layout Tag { get; set; }
+
+        /// <summary>
+        /// When Enabled is false the target will not send messages to the fluentd host. 
+        /// Note: The Write operations will still happen within NLog. It's better to disable it from the logger attribute,
+        /// this setting is aimed to be able to be used with a Layout renderer (GCD, MDC, MDLC and Variables)
+        /// </summary>
+        [DefaultValue(true)]
+        public Layout Enabled { get; set; }
 
         [DefaultValue(false)]
         public bool UseSsl { get; set; }
 
         [DefaultValue(true)]
         public bool ValidateCertificate { get; set; }
-
-        private TcpClient client;
-
-        private Stream stream;
-
-        private FluentdPacker packer;
 
         public FluentdTarget()
         {
@@ -79,16 +89,16 @@ namespace NLog.Fluentd
 
         private void ConnectClient()
         {
-            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", this.Host, this.Port, this.UseSsl);
+            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", _host, _port, UseSsl);
 
             try
             {
-                this.client.Connect(this.Host, this.Port);
+                this.client.Connect(_host, _port);
             }
             catch(SocketException se)
             {
-                InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", this.Host, this.Port);
-                throw;
+                InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _host, _port);
+                throw se;
             }
 
             if (this.UseSsl)
@@ -100,12 +110,12 @@ namespace NLog.Fluentd
                                                     EncryptionPolicy.RequireEncryption);
                 try
                 {
-                    sslStream.AuthenticateAsClient(this.Host, null, SslProtocols.Tls12, true);
+                    sslStream.AuthenticateAsClient(_host, null, SslProtocols.Tls12, true);
                     this.stream = sslStream;
                 }
                 catch (AuthenticationException e)
                 {
-                    InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", this.Host, this.Port);
+                    InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", _host, _port);
                     InternalLogger.Error("Exception: {0}", e.Message);
                     client.Close();
                     throw;
@@ -155,14 +165,24 @@ namespace NLog.Fluentd
 
         protected override void Write(AsyncLogEventInfo logEvent)
         {
+            if (!bool.Parse(Enabled?.Render(logEvent.LogEvent)))
+            {
+                InternalLogger.Trace("Fluentd is disabled.");
+                return;
+            }
+
+            _host = Host?.Render(logEvent.LogEvent);
+            _port = int.Parse(Port?.Render(logEvent.LogEvent));
+            _tag = Tag?.Render(logEvent.LogEvent);
+
             GetConnection();
-            InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, this.Host, this.Port);
+            InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _host, _port);
             var record = new Dictionary<string, string>();
             var logMessage = GetFormattedMessage(logEvent.LogEvent);
             record.Add("message", logMessage);
             try
             {
-                this.packer.Pack(logEvent.LogEvent.TimeStamp, this.Tag, record);
+                this.packer.Pack(logEvent.LogEvent.TimeStamp, _tag, record);
             }
             catch (Exception ex)
             {

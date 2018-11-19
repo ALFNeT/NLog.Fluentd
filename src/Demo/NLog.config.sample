@@ -23,6 +23,7 @@
               UseSsl="true"
               ValidateCertificate="false"
               layout="${message}"
+              enabled="${mdlc:item=FluendEnabled}"
               />      
       <target xsi:type="File"
               name="fluentd-file-fallback"

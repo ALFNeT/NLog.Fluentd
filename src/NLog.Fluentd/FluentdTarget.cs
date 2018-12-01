@@ -16,9 +16,9 @@ namespace NLog.Fluentd
     [Target("Fluentd")]
     public class FluentdTarget : TargetWithLayout, IFluentdTarget
     {
-        private string _host;
+        private string _fluentdHost;
         private string _tag;
-        private int _port;
+        private int _fluentdPort;
         private TcpClient client;
         private Stream stream;
         private FluentdPacker packer;
@@ -28,21 +28,49 @@ namespace NLog.Fluentd
         /// </summary>
         [RequiredParameter]
         [DefaultValue("127.0.0.1")]
-        public Layout Host { get; set; }
+        public Layout Host
+        {
+            get { return Host; }
+            set
+            {
+                Host = value;
+                _fluentdHost = value?.Render(LogEventInfo.CreateNullEvent());
+                Cleanup();
+            }
+        }
 
         /// <summary>
         /// Sets the Port for the connection
         /// </summary>
         [RequiredParameter]
         [DefaultValue("24224")]
-        public Layout Port { get; set; }
+        public Layout Port
+        {
+            get
+            {
+                return Port;
+            }
+            set
+            {
+                Port = value;
+                _fluentdPort = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
+            }
+        }
 
         /// <summary>
         /// Sets the Tag for the log redirection within Fluentd
         /// </summary>
         [RequiredParameter]
         [DefaultValue("nlog")]
-        public Layout Tag { get; set; }
+        public Layout Tag
+        {
+            get { return Tag; }
+            set
+            {
+                Tag = value;
+                _tag = value?.Render(LogEventInfo.CreateNullEvent());
+            }
+        }
 
         /// <summary>
         /// When Enabled is false the target will not send messages to the fluentd host. 
@@ -89,15 +117,15 @@ namespace NLog.Fluentd
 
         private void ConnectClient()
         {
-            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", _host, _port, UseSsl);
+            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", _fluentdHost, _fluentdPort, UseSsl);
 
             try
             {
-                this.client.Connect(_host, _port);
+                this.client.Connect(_fluentdHost, _fluentdPort);
             }
             catch(SocketException se)
             {
-                InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _host, _port);
+                InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _fluentdHost, _fluentdPort);
                 throw se;
             }
 
@@ -110,12 +138,12 @@ namespace NLog.Fluentd
                                                     EncryptionPolicy.RequireEncryption);
                 try
                 {
-                    sslStream.AuthenticateAsClient(_host, null, SslProtocols.Tls12, true);
+                    sslStream.AuthenticateAsClient(_fluentdHost, null, SslProtocols.Tls12, true);
                     this.stream = sslStream;
                 }
                 catch (AuthenticationException e)
                 {
-                    InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", _host, _port);
+                    InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", _fluentdHost, _fluentdPort);
                     InternalLogger.Error("Exception: {0}", e.Message);
                     client.Close();
                     throw;
@@ -171,12 +199,8 @@ namespace NLog.Fluentd
                 return;
             }
 
-            _host = Host?.Render(logEvent.LogEvent);
-            _port = int.Parse(Port?.Render(logEvent.LogEvent));
-            _tag = Tag?.Render(logEvent.LogEvent);
-
             GetConnection();
-            InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _host, _port);
+            InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, _fluentdPort);
             var record = new Dictionary<string, string>();
             var logMessage = GetFormattedMessage(logEvent.LogEvent);
             record.Add("message", logMessage);

@@ -6,7 +6,7 @@ NLog.Fluentd is a custom target of [NLog](https://github.com/nlog/NLog) that emi
 
 Installation
 -------
-NLog.Fluentd will be available as a NuGet Package. Type the following command into the Nuget Package Manager Console window to install it:
+NLog.Fluentd is available as a NuGet Package. Type the following command into the Nuget Package Manager Console window to install it:
 
     Install-Package NLog.Fluentd
 
@@ -50,10 +50,7 @@ For fluentd use case I recommend using the Buffering Wrapper (or the Async one),
 
 TODOs
 -------
-* Test SSL/TLS connection before sending packages
 * Allow to send data using JSON instead of MsgPack
-* Add support for other .Net targets (ie. Standard)
-* Re-introduce network settings options
 
 Notes
 -------

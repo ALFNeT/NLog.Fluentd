@@ -19,6 +19,7 @@ namespace NLog.Fluentd
         private string _fluentdHost;
         private string _tag;
         private int _fluentdPort;
+        private int _sendTimeout;
         private TcpClient client;
         private Stream stream;
         private FluentdPacker packer;
@@ -47,9 +48,7 @@ namespace NLog.Fluentd
         public Layout Port
         {
             get
-            {
-                return Port;
-            }
+            { return Port; }
             set
             {
                 Port = value;
@@ -69,6 +68,22 @@ namespace NLog.Fluentd
             {
                 Tag = value;
                 _tag = value?.Render(LogEventInfo.CreateNullEvent());
+            }
+        }
+
+        /// <summary>
+        /// Sets the Send Timeout
+        /// </summary>
+        [RequiredParameter]
+        [DefaultValue("3000")]
+        public Layout SendTimeout
+        {
+            get
+            { return SendTimeout; }
+            set
+            {
+                SendTimeout = value;
+                _sendTimeout = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
             }
         }
 
@@ -128,6 +143,8 @@ namespace NLog.Fluentd
                 InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _fluentdHost, _fluentdPort);
                 throw se;
             }
+
+            this.client.SendTimeout = _sendTimeout;
 
             if (this.UseSsl)
             {

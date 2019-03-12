@@ -35,5 +35,10 @@ namespace NLog.Fluentd
         /// this setting is aimed to be able to be used with a Layout renderer (GCD, MDC, MDLC and Variables)
         /// </summary>
         Layout Enabled { get; set; }
+
+        /// <summary>
+        /// Sets the amount of time a TcpClient will wait for a send operation to complete successfully.
+        /// </summary>
+        Layout SendTimeout { get; set; }
     }
 }

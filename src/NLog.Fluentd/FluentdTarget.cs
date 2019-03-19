@@ -19,7 +19,8 @@ namespace NLog.Fluentd
         private string _fluentdHost;
         private string _tag;
         private int _fluentdPort;
-        private int _sendTimeout;
+        private bool _asyncConnection;
+        private int _asyncConnTimeout;
         private TcpClient client;
         private Stream stream;
         private FluentdPacker packer;
@@ -31,10 +32,9 @@ namespace NLog.Fluentd
         [DefaultValue("127.0.0.1")]
         public Layout Host
         {
-            get { return Host; }
+            get { return _fluentdHost; }
             set
             {
-                Host = value;
                 _fluentdHost = value?.Render(LogEventInfo.CreateNullEvent());
                 Cleanup();
             }
@@ -47,11 +47,9 @@ namespace NLog.Fluentd
         [DefaultValue("24224")]
         public Layout Port
         {
-            get
-            { return Port; }
+            get { return _fluentdPort.ToString(); }
             set
             {
-                Port = value;
                 _fluentdPort = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
             }
         }
@@ -63,27 +61,40 @@ namespace NLog.Fluentd
         [DefaultValue("nlog")]
         public Layout Tag
         {
-            get { return Tag; }
+            get { return _tag; }
             set
             {
-                Tag = value;
                 _tag = value?.Render(LogEventInfo.CreateNullEvent());
             }
         }
 
         /// <summary>
-        /// Sets the Send Timeout
+        /// Flag to identify if connection is Assynchronous
+        /// </summary>
+        [RequiredParameter]
+        [DefaultValue("False")]
+        public Layout AsyncConnection
+        {
+            get
+            { return _asyncConnection.ToString(); }
+            set
+            {
+                _asyncConnection = bool.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
+            }
+        }
+
+        /// <summary>
+        /// Sets the Timeout for Assynchronous connections
         /// </summary>
         [RequiredParameter]
         [DefaultValue("3000")]
-        public Layout SendTimeout
+        public Layout AsyncConnectionTimeout
         {
             get
-            { return SendTimeout; }
+            { return _asyncConnTimeout.ToString(); }
             set
             {
-                SendTimeout = value;
-                _sendTimeout = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
+                _asyncConnTimeout = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
             }
         }
 
@@ -136,15 +147,20 @@ namespace NLog.Fluentd
 
             try
             {
-                this.client.Connect(_fluentdHost, _fluentdPort);
+                if (this._asyncConnection.Equals(true))
+                {
+                    this.client.ConnectAsync(_fluentdHost, _fluentdPort).Wait(_asyncConnTimeout);
+                }
+                else
+                {
+                    this.client.Connect(_fluentdHost, _fluentdPort);
+                }
             }
             catch(SocketException se)
             {
                 InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _fluentdHost, _fluentdPort);
                 throw se;
             }
-
-            this.client.SendTimeout = _sendTimeout;
 
             if (this.UseSsl)
             {

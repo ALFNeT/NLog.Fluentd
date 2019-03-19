@@ -22,7 +22,8 @@ Tag                         | Layout | yes      | Fluentd tag name              
 UseSsl                      | bool   | no       | Use SSL/TLS to connect to the fluentd node                   | false
 ValidateCertificate         | bool   | no       | Validate the certificate returned by the fluentd node        | true
 Enabled                     | Layout | no       | Enables or disables sending messages to fluentd              | true
-SendTimeout                 | Layout | yes      | amount of time it will wait for a send operation to complete | 3000
+AsyncConnection             | Layout | yes      | Setting to enable/disable the custom timeout                 | false
+AsyncConnectionTimeout      | Layout | yes      | Sets the custom timeout in case the target is not reachable  | false
 
 For fluentd use case I recommend using the Buffering Wrapper (or the Async one), along with a fallback option.
 
@@ -38,7 +39,8 @@ For fluentd use case I recommend using the Buffering Wrapper (or the Async one),
                 useSsl="true"
                 ValidateCertificate="false"
                 layout="${message}"
-                SendTimeout="3000"
+                AsyncConnection="false"
+                AsyncConnectionTimeout="5000"
                 />      
         <target xsi:type="File"
                 name="fluentd-file-fallback"

@@ -96,10 +96,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="Demo_TemporaryKey.pfx" />
-    <None Include="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </None>
     <None Include="NLog.config.sample" />
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />

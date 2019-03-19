@@ -14,16 +14,15 @@ Usage
 -----
 The `<target />` configuration section contains three required fields.
 
-Setting                     | Type   | Required | Description                                                  | Default       
---------------------------- |------- |--------- |------------------------------------------------------------- | --------------
-Host                        | Layout | yes      | Host name of the fluentd node                                | 127.0.0.1
-Port                        | Layout | yes      | Port number of the fluentd node                              | 24224
-Tag                         | Layout | yes      | Fluentd tag name                                             | nlog
-UseSsl                      | bool   | no       | Use SSL/TLS to connect to the fluentd node                   | false
-ValidateCertificate         | bool   | no       | Validate the certificate returned by the fluentd node        | true
-Enabled                     | Layout | no       | Enables or disables sending messages to fluentd              | true
-AsyncConnection             | Layout | yes      | Setting to enable/disable the custom timeout                 | false
-AsyncConnectionTimeout      | Layout | yes      | Sets the custom timeout in case the target is not reachable  | false
+Setting                     | Type   | Required | Description                                                                                   | Default       
+--------------------------- |------- |--------- |---------------------------------------------------------------------------------------------- | --------------
+Host                        | Layout | yes      | Host name of the fluentd node                                                                 | 127.0.0.1
+Port                        | Layout | yes      | Port number of the fluentd node                                                               | 24224
+Tag                         | Layout | yes      | Fluentd tag name                                                                              | nlog
+UseSsl                      | bool   | no       | Use SSL/TLS to connect to the fluentd node                                                    | false
+ValidateCertificate         | bool   | no       | Validate the certificate returned by the fluentd node                                         | true
+Enabled                     | Layout | no       | Enables or disables sending messages to fluentd                                               | true
+ConnectionTimeout           | Layout | yes      | Sets a custom timeout in case the target is not reachable. Set it to "0" for Default timeout  | 5000
 
 For fluentd use case I recommend using the Buffering Wrapper (or the Async one), along with a fallback option.
 
@@ -39,8 +38,7 @@ For fluentd use case I recommend using the Buffering Wrapper (or the Async one),
                 useSsl="true"
                 ValidateCertificate="false"
                 layout="${message}"
-                AsyncConnection="false"
-                AsyncConnectionTimeout="5000"
+                ConnectionTimeout="5000"
                 />      
         <target xsi:type="File"
                 name="fluentd-file-fallback"

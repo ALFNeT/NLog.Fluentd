@@ -37,14 +37,8 @@ namespace NLog.Fluentd
         Layout Enabled { get; set; }
 
         /// <summary>
-        /// Used in conjunction with the connection timeout (setting below). If enabled, a custom timeout for the connection attempt can be set
-        /// </summary>
-        Layout AsyncConnection { get; set; }
-
-        /// <summary>
         /// How long (in miliseconds) the connection will wait before it timesout. 
-        /// Used in conjunction with the "AsyncConnection" setting above. This number is only considered if the above is enabled.
         /// </summary>
-        Layout AsyncConnectionTimeout { get; set; }
+        Layout ConnectionTimeout { get; set; }
     }
 }

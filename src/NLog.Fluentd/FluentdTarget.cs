@@ -19,8 +19,7 @@ namespace NLog.Fluentd
         private string _fluentdHost;
         private string _tag;
         private int _fluentdPort;
-        private bool _asyncConnection;
-        private int _asyncConnTimeout;
+        private int _connTimeout;
         private TcpClient client;
         private Stream stream;
         private FluentdPacker packer;
@@ -69,32 +68,17 @@ namespace NLog.Fluentd
         }
 
         /// <summary>
-        /// Flag to identify if connection is Assynchronous
-        /// </summary>
-        [RequiredParameter]
-        [DefaultValue("False")]
-        public Layout AsyncConnection
-        {
-            get
-            { return _asyncConnection.ToString(); }
-            set
-            {
-                _asyncConnection = bool.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
-            }
-        }
-
-        /// <summary>
         /// Sets the Timeout for Assynchronous connections
         /// </summary>
         [RequiredParameter]
         [DefaultValue("3000")]
-        public Layout AsyncConnectionTimeout
+        public Layout ConnectionTimeout
         {
             get
-            { return _asyncConnTimeout.ToString(); }
+            { return _connTimeout.ToString(); }
             set
             {
-                _asyncConnTimeout = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
+                _connTimeout = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
             }
         }
 
@@ -147,9 +131,9 @@ namespace NLog.Fluentd
 
             try
             {
-                if (this._asyncConnection.Equals(true))
+                if (this._connTimeout > 0)
                 {
-                    this.client.ConnectAsync(_fluentdHost, _fluentdPort).Wait(_asyncConnTimeout);
+                    this.client.ConnectAsync(_fluentdHost, _fluentdPort).Wait(_connTimeout);
                 }
                 else
                 {

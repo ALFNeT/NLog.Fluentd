@@ -24,8 +24,7 @@
               ValidateCertificate="false"
               layout="${message}"
               enabled="${mdlc:item=FluendEnabled}"
-              AsyncConnection="false"
-              AsyncConnectionTimeout="5000"
+              ConnectionTimeout="5000"
               />      
       <target xsi:type="File"
               name="fluentd-file-fallback"

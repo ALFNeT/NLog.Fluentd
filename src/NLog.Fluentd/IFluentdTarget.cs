@@ -37,8 +37,8 @@ namespace NLog.Fluentd
         Layout Enabled { get; set; }
 
         /// <summary>
-        /// Sets the amount of time a TcpClient will wait for a send operation to complete successfully.
+        /// How long (in miliseconds) the connection will wait before it timesout. 
         /// </summary>
-        Layout SendTimeout { get; set; }
+        Layout ConnectionTimeout { get; set; }
     }
 }

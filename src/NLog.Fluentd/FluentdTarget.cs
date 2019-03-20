@@ -17,27 +17,18 @@ namespace NLog.Fluentd
     public class FluentdTarget : TargetWithLayout, IFluentdTarget
     {
         private string _fluentdHost;
-        private string _tag;
         private int _fluentdPort;
-        private int _connTimeout;
+        private string _fluentdTag;
+        private bool _fluentdEnabled;
+        private int _fluentdConnTimeout;
         private TcpClient client;
         private Stream stream;
         private FluentdPacker packer;
 
         /// <summary>
         /// Sets the Host of the Fluentd instance which will receive the logs
-        /// </summary>
-        [RequiredParameter]
-        [DefaultValue("127.0.0.1")]
-        public Layout Host
-        {
-            get { return _fluentdHost; }
-            set
-            {
-                _fluentdHost = value?.Render(LogEventInfo.CreateNullEvent());
-                Cleanup();
-            }
-        }
+        /// </summary>        
+        public Layout Host { get; set; }
 
         /// <summary>
         /// Sets the Port for the connection
@@ -47,29 +38,19 @@ namespace NLog.Fluentd
         /// <summary>
         /// Sets the Tag for the log redirection within Fluentd
         /// </summary>
-        [RequiredParameter]
-        [DefaultValue("nlog")]
-        public Layout Tag
-        {
-            get { return _tag; }
-            set
-            {
-                _tag = value?.Render(LogEventInfo.CreateNullEvent());
-            }
-        }
-
-        /// <summary>
-        /// Sets the Timeout for Assynchronous connections
-        /// </summary>
-        public Layout ConnectionTimeout { get; set; }
+        public Layout Tag { get; set; }
 
         /// <summary>
         /// When Enabled is false the target will not send messages to the fluentd host. 
         /// Note: The Write operations will still happen within NLog. It's better to disable it from the logger attribute,
         /// this setting is aimed to be able to be used with a Layout renderer (GCD, MDC, MDLC and Variables)
         /// </summary>
-        [DefaultValue(true)]
         public Layout Enabled { get; set; }
+
+        /// <summary>
+        /// Sets the Connection Timeout
+        /// </summary>
+        public Layout ConnectionTimeout { get; set; }
 
         [DefaultValue(false)]
         public bool UseSsl { get; set; }
@@ -112,9 +93,9 @@ namespace NLog.Fluentd
 
             try
             {
-                if (this._connTimeout > 0)
+                if (this._fluentdConnTimeout > 0)
                 {
-                    this.client.ConnectAsync(_fluentdHost, _fluentdPort).Wait(_connTimeout);
+                    this.client.ConnectAsync(_fluentdHost, _fluentdPort).Wait(_fluentdConnTimeout);
                 }
                 else
                 {
@@ -191,29 +172,17 @@ namespace NLog.Fluentd
 
         protected override void Write(AsyncLogEventInfo logEvent)
         {
-            if (!bool.Parse(Enabled?.Render(logEvent.LogEvent)))
+            _fluentdEnabled = bool.Parse(Enabled?.Render(logEvent.LogEvent));
+            if (!_fluentdEnabled)
             {
                 InternalLogger.Trace("Fluentd is disabled.");
                 return;
             }
 
-            if (Int32.TryParse(Port?.Render(logEvent.LogEvent), out int _outFluentdPort))
-            {
-                _fluentdPort = _outFluentdPort;
-            }
-            else
-            {
-                _fluentdPort = 24224;
-            }
-
-            if (Int32.TryParse(ConnectionTimeout?.Render(logEvent.LogEvent), out int _outConnTimeout))
-            {
-                _connTimeout = _outConnTimeout;
-            }
-            else
-            {
-                _connTimeout = 5000;
-            }
+            _fluentdHost = Host?.Render(logEvent.LogEvent);
+            _fluentdPort = int.Parse(string.IsNullOrEmpty(Port?.Render(logEvent.LogEvent)) ? "24224" : Port?.Render(logEvent.LogEvent));
+            _fluentdTag  = Tag?.Render(logEvent.LogEvent);
+            _fluentdConnTimeout = int.Parse(string.IsNullOrEmpty(ConnectionTimeout?.Render(logEvent.LogEvent)) ? "0" : ConnectionTimeout?.Render(logEvent.LogEvent));
 
             GetConnection();
             InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, _fluentdPort);
@@ -222,7 +191,7 @@ namespace NLog.Fluentd
             record.Add("message", logMessage);
             try
             {
-                this.packer.Pack(logEvent.LogEvent.TimeStamp, _tag, record);
+                this.packer.Pack(logEvent.LogEvent.TimeStamp, _fluentdTag, record);
             }
             catch (Exception ex)
             {

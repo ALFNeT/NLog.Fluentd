@@ -42,16 +42,7 @@ namespace NLog.Fluentd
         /// <summary>
         /// Sets the Port for the connection
         /// </summary>
-        [RequiredParameter]
-        [DefaultValue("24224")]
-        public Layout Port
-        {
-            get { return _fluentdPort.ToString(); }
-            set
-            {
-                _fluentdPort = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
-            }
-        }
+        public Layout Port { get; set; }
 
         /// <summary>
         /// Sets the Tag for the log redirection within Fluentd
@@ -70,17 +61,7 @@ namespace NLog.Fluentd
         /// <summary>
         /// Sets the Timeout for Assynchronous connections
         /// </summary>
-        [RequiredParameter]
-        [DefaultValue("3000")]
-        public Layout ConnectionTimeout
-        {
-            get
-            { return _connTimeout.ToString(); }
-            set
-            {
-                _connTimeout = int.Parse(value?.Render(LogEventInfo.CreateNullEvent()));
-            }
-        }
+        public Layout ConnectionTimeout { get; set; }
 
         /// <summary>
         /// When Enabled is false the target will not send messages to the fluentd host. 
@@ -214,6 +195,24 @@ namespace NLog.Fluentd
             {
                 InternalLogger.Trace("Fluentd is disabled.");
                 return;
+            }
+
+            if (Int32.TryParse(Port?.Render(logEvent.LogEvent), out int _outFluentdPort))
+            {
+                _fluentdPort = _outFluentdPort;
+            }
+            else
+            {
+                _fluentdPort = 24224;
+            }
+
+            if (Int32.TryParse(ConnectionTimeout?.Render(logEvent.LogEvent), out int _outConnTimeout))
+            {
+                _connTimeout = _outConnTimeout;
+            }
+            else
+            {
+                _connTimeout = 5000;
             }
 
             GetConnection();

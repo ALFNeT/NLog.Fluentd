@@ -52,7 +52,7 @@ namespace NLog.Fluentd
         /// <summary>
         /// Sets the Connection Timeout
         /// </summary>
-        [DefaultValue("30")]
+        [DefaultValue("30000")]
         public Layout ConnectionTimeout { get; set; }
 
         [DefaultValue(false)]
@@ -65,7 +65,7 @@ namespace NLog.Fluentd
         {
             Name = "Fluentd";
             UseSsl = false;
-            ConnectionTimeout = "30";
+            ConnectionTimeout = "30000";
             Enabled = "true";
             Port = "24224";
         }
@@ -183,7 +183,7 @@ namespace NLog.Fluentd
             _fluentdHost = Host?.Render(logEvent.LogEvent);
             _fluentdPort = int.Parse(string.IsNullOrEmpty(Port?.Render(logEvent.LogEvent)) ? "24224" : Port?.Render(logEvent.LogEvent));
             _fluentdTag  = Tag?.Render(logEvent.LogEvent);
-            _fluentdConnTimeout = int.Parse(string.IsNullOrEmpty(ConnectionTimeout?.Render(logEvent.LogEvent)) ? "30" : ConnectionTimeout?.Render(logEvent.LogEvent));
+            _fluentdConnTimeout = int.Parse(string.IsNullOrEmpty(ConnectionTimeout?.Render(logEvent.LogEvent)) ? "30000" : ConnectionTimeout?.Render(logEvent.LogEvent));
 
             GetConnection();
             InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, _fluentdPort);

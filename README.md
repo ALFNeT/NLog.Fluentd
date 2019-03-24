@@ -24,7 +24,9 @@ ValidateCertificate         | bool   | no       | Validate the certificate retur
 Enabled                     | Layout | no       | Enables or disables sending messages to fluentd                                               | true
 ConnectionTimeout           | int    | no       | Sets a custom timeout in case the target is not reachable.                                    | 30000
 
-For fluentd use case I recommend using the Buffering Wrapper (or the Async one), along with a fallback option.
+For fluentd use case I recommend using the AsyncWrapper, along with a fallback option.
+
+Note: If using the Buffering Wrapper keep in mind that when the buffer size limit is reached the flushing operation will be synchronous, meaning that the logging thread will be blocked.
 
 ```
 <targets>
@@ -49,10 +51,6 @@ For fluentd use case I recommend using the Buffering Wrapper (or the Async one),
     </target>
 </targets>
 ```
-
-TODOs
--------
-* Allow to send data using JSON instead of MsgPack
 
 Acknowledgements
 -------

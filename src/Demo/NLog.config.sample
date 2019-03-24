@@ -13,7 +13,7 @@
     <target name="nlog-service-default" xsi:type="File" layout="${message}" fileName="c:\temp\nlog\${logger}_${shortdate}.txt" keepFileOpen="true" />
   </targets>  
   <targets>
-    <default-wrapper xsi:type="BufferingWrapper" bufferSize="200" flushTimeout="50" slidingTimeout="true" overflowAction="Flush"/>
+    <default-wrapper xsi:type="AsyncWrapper" overflowAction="Grow" queueLimit="1000" timeToSleepBetweenBatches="0" />
     <target xsi:type="FallbackGroup" name="fluentd-fallback-group" returnToFirstOnSuccess="true">      
       <target xsi:type="Fluentd"
               name="fluentd"

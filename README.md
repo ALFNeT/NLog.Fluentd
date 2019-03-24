@@ -54,7 +54,7 @@ TODOs
 -------
 * Allow to send data using JSON instead of MsgPack
 
-Notes
+Acknowledgements
 -------
 This started as a fork of Moriyoshi Koizumi's [Nlog.Targets.Fluentd](https://github.com/fluent/NLog.Targets.Fluentd) NLog extension.
 

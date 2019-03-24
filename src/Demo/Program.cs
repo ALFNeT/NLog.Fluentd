@@ -31,10 +31,9 @@ namespace Demo
             var logger = LogManager.GetLogger("demo");
 
             MappedDiagnosticsLogicalContext.Set("FluentdHost", "127.0.0.1");
-            MappedDiagnosticsLogicalContext.Set("FluentdPort", "24224");
             MappedDiagnosticsLogicalContext.Set("FluentdTag", "nlog.demo");
             MappedDiagnosticsLogicalContext.Set("FluentdEnabled", "true");
-            MappedDiagnosticsLogicalContext.Set("FluentdTimeout", "5000");
+            MappedDiagnosticsLogicalContext.Set("FluentdTimeout", "30000");
 
             while (true)
             {

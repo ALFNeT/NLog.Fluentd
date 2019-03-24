@@ -12,7 +12,7 @@ namespace NLog.Fluentd
         /// <summary>
         /// Sets the Port for the connection
         /// </summary>
-        Layout Port { get; set; }
+        int Port { get; set; }
 
         /// <summary>
         /// Sets the Tag for the log redirection within Fluentd
@@ -39,6 +39,6 @@ namespace NLog.Fluentd
         /// <summary>
         /// How long (in miliseconds) the connection will wait before it timesout. 
         /// </summary>
-        Layout ConnectionTimeout { get; set; }
+        int ConnectionTimeout { get; set; }
     }
 }

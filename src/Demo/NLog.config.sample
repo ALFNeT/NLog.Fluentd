@@ -17,14 +17,12 @@
     <target xsi:type="FallbackGroup" name="fluentd-fallback-group" returnToFirstOnSuccess="true">      
       <target xsi:type="Fluentd"
               name="fluentd"
+              enabled="${mdlc:item=FluentdEnabled}"
               Host="${mdlc:item=FluentdHost}"
-              Port="${mdlc:item=FluentdPort}"
               Tag="${mdlc:item=FluentdTag}"
               UseSsl="true"
               ValidateCertificate="false"
               layout="${message}"
-              enabled="${mdlc:item=FluentdEnabled}"
-              ConnectionTimeout="${mdlc:item=FluentdTimeout}"
               />      
       <target xsi:type="File"
               name="fluentd-file-fallback"

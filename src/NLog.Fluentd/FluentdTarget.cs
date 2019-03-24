@@ -14,67 +14,33 @@ using NLog.Layouts;
 namespace NLog.Fluentd
 {
     [Target("Fluentd")]
-    public class FluentdTarget : TargetWithLayout, IFluentdTarget
+    public partial class FluentdTarget : TargetWithContext, IFluentdTarget
     {
         private string _fluentdHost;
-        private int _fluentdPort;
         private string _fluentdTag;
         private bool _fluentdEnabled;
-        private int _fluentdConnTimeout;
         private TcpClient client;
         private Stream stream;
         private FluentdPacker packer;
 
         /// <summary>
-        /// Sets the Host of the Fluentd instance which will receive the logs
-        /// </summary>        
-        public Layout Host { get; set; }
-
-        /// <summary>
-        /// Sets the Port for the connection
+        /// Construct a Fluentd loggin target.
         /// </summary>
-        [DefaultValue("24224")]
-        public Layout Port { get; set; }
-
-        /// <summary>
-        /// Sets the Tag for the log redirection within Fluentd
-        /// </summary>
-        public Layout Tag { get; set; }
-
-        /// <summary>
-        /// When Enabled is false the target will not send messages to the fluentd host. 
-        /// Note: The Write operations will still happen within NLog. It's better to disable it from the logger attribute,
-        /// this setting is aimed to be able to be used with a Layout renderer (GCD, MDC, MDLC and Variables)
-        /// </summary>
-        [DefaultValue("true")]
-        public Layout Enabled { get; set; }
-
-        /// <summary>
-        /// Sets the Connection Timeout
-        /// </summary>
-        [DefaultValue("30000")]
-        public Layout ConnectionTimeout { get; set; }
-
-        [DefaultValue(false)]
-        public bool UseSsl { get; set; }
-
-        [DefaultValue(true)]
-        public bool ValidateCertificate { get; set; }
-
         public FluentdTarget()
         {
-            Name = "Fluentd";
-            UseSsl = false;
-            ConnectionTimeout = "30000";
-            Enabled = "true";
-            Port = "24224";
         }
 
-        protected void GetConnection()
+        public FluentdTarget(string name) : this()
         {
-            if (this.client == null || !this.client.Connected)
+            Name = name;
+        }
+
+        protected void GetConnection(string renderedFluentdHost)
+        {
+            if (this.client == null || !this.client.Connected || _fluentdHost != renderedFluentdHost)
             {
                 Cleanup();
+                _fluentdHost = renderedFluentdHost;
                 this.client = new TcpClient();
                 ConnectClient();
             }
@@ -93,18 +59,20 @@ namespace NLog.Fluentd
 
             return sslPolicyErrors == SslPolicyErrors.None;
         }
-
+        /// <summary>
+        /// Establishes a connection to Fluentd and creates a FluentdPacker.
+        /// </summary>
         private void ConnectClient()
         {
-            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", _fluentdHost, _fluentdPort, UseSsl);
+            NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", _fluentdHost, Port, UseSsl);
 
             try
             {
-                this.client.ConnectAsync(_fluentdHost, _fluentdPort).Wait(_fluentdConnTimeout);
+                this.client.ConnectAsync(_fluentdHost, Port).Wait(ConnectionTimeout);
             }
             catch(SocketException se)
             {
-                InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _fluentdHost, _fluentdPort);
+                InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _fluentdHost, Port);
                 throw se;
             }
 
@@ -122,9 +90,9 @@ namespace NLog.Fluentd
                 }
                 catch (AuthenticationException e)
                 {
-                    InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", _fluentdHost, _fluentdPort);
+                    InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", _fluentdHost, Port);
                     InternalLogger.Error("Exception: {0}", e.Message);
-                    client.Close();
+                    Cleanup();
                     throw;
                 }
             }
@@ -145,7 +113,7 @@ namespace NLog.Fluentd
             }
             catch (Exception ex)
             {
-                NLog.Common.InternalLogger.Warn("Fluentd Close - " + ex.ToString());
+                NLog.Common.InternalLogger.Warn("Fluentd Cleanup - " + ex.ToString());
             }
             finally
             {
@@ -155,6 +123,9 @@ namespace NLog.Fluentd
             }
         }
 
+        /// <summary>
+        /// Closes / Disposes the Target
+        /// </summary>
         protected override void CloseTarget()
         {
             Cleanup();
@@ -180,13 +151,11 @@ namespace NLog.Fluentd
                 return;
             }
 
-            _fluentdHost = Host?.Render(logEvent.LogEvent);
-            _fluentdPort = int.Parse(string.IsNullOrEmpty(Port?.Render(logEvent.LogEvent)) ? "24224" : Port?.Render(logEvent.LogEvent));
+            string renderedFluentdHost = Host?.Render(logEvent.LogEvent);
             _fluentdTag  = Tag?.Render(logEvent.LogEvent);
-            _fluentdConnTimeout = int.Parse(string.IsNullOrEmpty(ConnectionTimeout?.Render(logEvent.LogEvent)) ? "30000" : ConnectionTimeout?.Render(logEvent.LogEvent));
 
-            GetConnection();
-            InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, _fluentdPort);
+            GetConnection(renderedFluentdHost);
+            InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, Port);
             var record = new Dictionary<string, string>();
             var logMessage = GetFormattedMessage(logEvent.LogEvent);
             record.Add("message", logMessage);

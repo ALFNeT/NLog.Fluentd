@@ -1,6 +1,6 @@
 NLog.Fluentd
 ====================
-[![NuGet](https://img.shields.io/badge/NLog.Fluentd-v1.0.3-blue.svg)](https://www.nuget.org/packages/NLog.Fluentd)
+[![NuGet](https://img.shields.io/badge/NLog.Fluentd-v1.0.4-blue.svg)](https://www.nuget.org/packages/NLog.Fluentd)
 
 NLog.Fluentd is a custom target of [NLog](https://github.com/nlog/NLog) that emits the log entries to a [fluentd](http://www.fluentd.org/) node.
 
@@ -22,13 +22,13 @@ Tag                         | Layout | yes      | Fluentd tag name              
 UseSsl                      | bool   | no       | Use SSL/TLS to connect to the fluentd node                                                    | false
 ValidateCertificate         | bool   | no       | Validate the certificate returned by the fluentd node                                         | true
 Enabled                     | Layout | no       | Enables or disables sending messages to fluentd                                               | true
-ConnectionTimeout           | Layout | no       | Sets a custom timeout in case the target is not reachable.                                    | 30000
+ConnectionTimeout           | int    | no       | Sets a custom timeout in case the target is not reachable.                                    | 30000
 
 For fluentd use case I recommend using the Buffering Wrapper (or the Async one), along with a fallback option.
 
 ```
 <targets>
-    <default-wrapper xsi:type="BufferingWrapper" bufferSize="200" flushTimeout="50" slidingTimeout="true" overflowAction="Flush"/>
+    <default-wrapper xsi:type="BufferingWrapper" bufferSize="1000" flushTimeout="50" slidingTimeout="false" overflowAction="Flush"/>
     <target xsi:type="FallbackGroup" name="fluentd-fallback-group" returnToFirstOnSuccess="true">
         <target xsi:type="Fluentd"
                 name="fluentd"
@@ -38,7 +38,7 @@ For fluentd use case I recommend using the Buffering Wrapper (or the Async one),
                 useSsl="true"
                 ValidateCertificate="false"
                 layout="${message}"
-                ConnectionTimeout="5000"
+                ConnectionTimeout=5000
                 />
         <target xsi:type="File"
                 name="fluentd-file-fallback"

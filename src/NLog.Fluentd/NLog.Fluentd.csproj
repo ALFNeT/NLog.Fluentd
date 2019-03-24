@@ -6,7 +6,7 @@
     <Authors>Alan Featherston Lago</Authors>
     <CurrentYear>$([System.DateTime]::Now.ToString(yyyy))</CurrentYear>
     <Copyright></Copyright>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <PackageTags>NLog;fluentd;log;logging</PackageTags>
     <PackageIconUrl>http://nlog-project.org/N.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/ALFNeT/NLog.Fluentd</PackageProjectUrl>
@@ -16,8 +16,8 @@
     <AssemblyName>NLog.Fluentd</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Company>Alan Featherston Lago</Company>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <FileVersion>1.0.3.0</FileVersion>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

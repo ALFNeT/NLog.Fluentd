@@ -17,7 +17,6 @@ namespace NLog.Fluentd
     public partial class FluentdTarget : TargetWithLayout, IFluentdTarget
     {
         private string _fluentdHost;
-        private string _fluentdTag;
         private bool _fluentdEnabled;
         private TcpClient _client;
         private Stream _stream;
@@ -178,25 +177,24 @@ namespace NLog.Fluentd
             _fluentdEnabled = bool.Parse(Enabled?.Render(logEvent));
             if (!_fluentdEnabled)
             {
-                InternalLogger.Trace("Fluentd is disabled.");
+                InternalLogger.Trace("Fluentd target is disabled.");
                 return;
             }
 
-            string renderedFluentdHost = Host?.Render(logEvent);
-            _fluentdTag  = Tag?.Render(logEvent);
+            CheckConnectionIsValid(Host.Render(logEvent));
 
-            CheckConnectionIsValid(renderedFluentdHost);
-            InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, Port);
-            var record = new Dictionary<string, string>();
-            var logMessage = Layout.Render(logEvent);;
-            record.Add("message", logMessage);
+            string fluentdTag  = Tag?.Render(logEvent);
+            Dictionary<string, string> record = new Dictionary<string, string>();
+            record.Add("message", Layout.Render(logEvent));
+
             try
             {
-                this._packer.Pack(logEvent.TimeStamp, _fluentdTag, record);
+                InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, Port);
+                this._packer.Pack(logEvent.TimeStamp, fluentdTag, record);
             }
             catch (Exception ex)
             {
-                InternalLogger.Warn("Fluentd Emit - " + ex.ToString());
+                InternalLogger.Warn("Fluentd: Error Packing event - " + ex.ToString());
                 ResetConnection();
                 throw;  // Notify NLog of failure
             }

@@ -17,6 +17,12 @@ namespace NLog.Fluentd
         private static DateTime unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private readonly Packer packer;
 
+        /// <summary>
+        /// Packs an event in the stream.
+        /// </summary>
+        /// <remarks>
+        /// The event is packed using the Message Mode.
+        /// </remarks>
         public void Pack(DateTime timestamp, string tag, IDictionary<string, string> data)
 
         {
@@ -27,9 +33,13 @@ namespace NLog.Fluentd
             this.packer.Pack(data, SerializationContext);
         }
 
+        /// <summary>
+        /// Initializes a new instance of MsgPack.Packer
+        /// </summary>
+        /// <param name="stream">Stream object to be wrapped by the Packer</param>
         public FluentdPacker(Stream stream)
         {
-            this.packer = Packer.Create(stream);           
+            this.packer = Packer.Create(stream);
         }
 
         private static SerializationContext InstantiateSerializationContext()

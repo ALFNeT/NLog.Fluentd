@@ -73,18 +73,20 @@ namespace NLog.Fluentd
             catch(SocketException se)
             {
                 InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _fluentdHost, Port);
+                Cleanup();
                 throw se;
             }
 
             if (this.UseSsl)
             {
-                SslStream sslStream = new SslStream(new BufferedStream(this.client.GetStream()),
-                                                    false,
-                                                    new RemoteCertificateValidationCallback(ValidateServerCertificate), 
-                                                    null,
-                                                    EncryptionPolicy.RequireEncryption);
                 try
                 {
+                    SslStream sslStream = new SslStream(new BufferedStream(this.client.GetStream()),
+                                                    false,
+                                                    new RemoteCertificateValidationCallback(ValidateServerCertificate),
+                                                    null,
+                                                    EncryptionPolicy.RequireEncryption);
+
                     sslStream.AuthenticateAsClient(_fluentdHost, null, SslProtocols.Tls12, true);
                     this.stream = sslStream;
                 }
@@ -92,6 +94,12 @@ namespace NLog.Fluentd
                 {
                     InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", _fluentdHost, Port);
                     InternalLogger.Error("Exception: {0}", e.Message);
+                    Cleanup();
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    InternalLogger.Error("Exception: {0}", ex.Message);
                     Cleanup();
                     throw;
                 }
@@ -107,7 +115,6 @@ namespace NLog.Fluentd
         {
             try
             {
-                this.stream?.FlushAsync();
                 this.stream?.Dispose();
                 this.client?.Close();
             }
@@ -166,7 +173,7 @@ namespace NLog.Fluentd
             catch (Exception ex)
             {
                 InternalLogger.Warn("Fluentd Emit - " + ex.ToString());
-
+                Cleanup();
                 throw;  // Notify NLog of failure
             }
         }

@@ -195,7 +195,6 @@ namespace NLog.Fluentd
             catch (Exception ex)
             {
                 InternalLogger.Warn("Fluentd: Error Packing event - " + ex.ToString());
-                ResetConnection();
                 throw;  // Notify NLog of failure
             }
         }

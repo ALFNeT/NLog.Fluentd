@@ -14,7 +14,7 @@ using NLog.Layouts;
 namespace NLog.Fluentd
 {
     [Target("Fluentd")]
-    public partial class FluentdTarget : TargetWithContext, IFluentdTarget
+    public partial class FluentdTarget : TargetWithLayout, IFluentdTarget
     {
         private string _fluentdHost;
         private string _fluentdTag;
@@ -24,24 +24,32 @@ namespace NLog.Fluentd
         private FluentdPacker _packer;
 
         /// <summary>
-        /// Construct a Fluentd loggin target.
+        /// Initializes a new instance of the Fluentd logging target.
         /// </summary>
         public FluentdTarget()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the Fluentd logging target.
+        /// </summary>
+        /// <param name="name">Name of the target.</param>
         public FluentdTarget(string name) : this()
         {
             Name = name;
         }
 
+        /// <summary>
+        /// Checks if the tcp connection is healthy and that the host hasn't been modified,
+        /// if it has then the connection is reset.
+        /// </summary>
+        /// <param name="renderedFluentdHost">Host name of fluentd.</param>
         protected void CheckConnectionIsValid(string renderedFluentdHost)
         {
             if (this._client == null || !this._client.Connected || _fluentdHost != renderedFluentdHost)
             {
-                Cleanup();
+                ResetConnection();
                 _fluentdHost = renderedFluentdHost;
-                this._client = new TcpClient();
                 InitiateTCPConnection();
                 if (this.UseSsl)
                 {
@@ -49,7 +57,7 @@ namespace NLog.Fluentd
                 }
                 else
                 {
-                    SetUpUnsecureConnectionStream();
+                    SetUpInsecureConnectionStream();
                 }
                 this._packer = new FluentdPacker(this._stream);
             }
@@ -69,24 +77,31 @@ namespace NLog.Fluentd
             return sslPolicyErrors == SslPolicyErrors.None;
         }
 
+        /// <summary>
+        /// Connects to the fluentd cluster through a TCP socket.
+        /// </summary>
+        /// <remarks>
+        /// The connection will timeout after `ConnectionTimeout`
+        /// </remarks>
         private void InitiateTCPConnection()
         {
             NLog.Common.InternalLogger.Debug("Fluentd Connecting to {0}:{1}, SSL:{2}", _fluentdHost, Port, UseSsl);
 
             try
             {
+                this._client = new TcpClient();
                 this._client.ConnectAsync(_fluentdHost, Port).Wait(ConnectionTimeout);
             }
             catch(SocketException se)
             {
                 InternalLogger.Error("Fluentd Extension Failed to connect against {0}:{1}", _fluentdHost, Port);
-                Cleanup();
+                ResetConnection();
                 throw se;
             }
         }
 
         /// <summary>
-        /// Establishes a connection to Fluentd and creates a FluentdPacker.
+        /// Creates and authenticates the stream
         /// </summary>
         private void SetUpConnectionStream()
         {
@@ -105,15 +120,15 @@ namespace NLog.Fluentd
             {
                 InternalLogger.Error("Fluentd Extension Failed to authenticate against {0}:{1}", _fluentdHost, Port);
                 InternalLogger.Error("Exception: {0}", ex.Message);
-                Cleanup();
+                ResetConnection();
                 throw;
             }
         }
 
         /// <summary>
-        /// Establishes a connection to Fluentd and creates a FluentdPacker.
+        /// Creates an insecure stream.
         /// </summary>
-        private void SetUpUnsecureConnectionStream()
+        private void SetUpInsecureConnectionStream()
         {
             try
             {
@@ -122,12 +137,15 @@ namespace NLog.Fluentd
             catch (Exception ex)
             {
                 InternalLogger.Error("Exception: {0}", ex.Message);
-                Cleanup();
+                ResetConnection();
                 throw;
             }
         }
 
-        protected void Cleanup()
+        /// <summary>
+        /// Resets all objects related to the fluentd connection.
+        /// </summary>
+        protected void ResetConnection()
         {
             try
             {
@@ -136,7 +154,7 @@ namespace NLog.Fluentd
             }
             catch (Exception ex)
             {
-                NLog.Common.InternalLogger.Warn("Fluentd Cleanup - " + ex.ToString());
+                NLog.Common.InternalLogger.Warn("Fluentd: Connection Reset Error  - " + ex.ToString());
             }
             finally
             {
@@ -147,49 +165,39 @@ namespace NLog.Fluentd
         }
 
         /// <summary>
-        /// Closes / Disposes the Target
+        /// Closes the Target
         /// </summary>
         protected override void CloseTarget()
         {
-            Cleanup();
+            ResetConnection();
             base.CloseTarget();
         }
-        
-        /// <summary>
-        /// Formats the log event for write.
-        /// </summary>
-        /// <param name="logEvent">The log event to be formatted.</param>
-        /// <returns>A string representation of the log event.</returns>
-        protected virtual string GetFormattedMessage(LogEventInfo logEvent)
-        {
-            return Layout.Render(logEvent);
-        }
 
-        protected override void Write(AsyncLogEventInfo logEvent)
+        protected override void Write(LogEventInfo logEvent)
         {
-            _fluentdEnabled = bool.Parse(Enabled?.Render(logEvent.LogEvent));
+            _fluentdEnabled = bool.Parse(Enabled?.Render(logEvent));
             if (!_fluentdEnabled)
             {
                 InternalLogger.Trace("Fluentd is disabled.");
                 return;
             }
 
-            string renderedFluentdHost = Host?.Render(logEvent.LogEvent);
-            _fluentdTag  = Tag?.Render(logEvent.LogEvent);
+            string renderedFluentdHost = Host?.Render(logEvent);
+            _fluentdTag  = Tag?.Render(logEvent);
 
             CheckConnectionIsValid(renderedFluentdHost);
             InternalLogger.Trace("Fluentd (Name={0}): Sending to address: '{1}:{2}'", Name, _fluentdHost, Port);
             var record = new Dictionary<string, string>();
-            var logMessage = GetFormattedMessage(logEvent.LogEvent);
+            var logMessage = Layout.Render(logEvent);;
             record.Add("message", logMessage);
             try
             {
-                this._packer.Pack(logEvent.LogEvent.TimeStamp, _fluentdTag, record);
+                this._packer.Pack(logEvent.TimeStamp, _fluentdTag, record);
             }
             catch (Exception ex)
             {
                 InternalLogger.Warn("Fluentd Emit - " + ex.ToString());
-                Cleanup();
+                ResetConnection();
                 throw;  // Notify NLog of failure
             }
         }
